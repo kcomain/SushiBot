@@ -207,29 +207,31 @@ async def hypixel(ctx,arg1):
   
 @bot.command()
 async def item(ctx, *, arg):
-  argn=arg
-  arg = arg.upper()
-  arg = arg.replace(" ", "_")
-  slothItemApi=requests.get('https://api.slothpixel.me/api/skyblock/items/')
-  slothItemApi=slothItemApi.json()
-  slothAhApi = requests.get('https://api.slothpixel.me/api/skyblock/auctions/'+arg)
-  slothAhApi=slothAhApi.json()
-  if slothItemApi[arg]['tier'] == 'COMMON':
-    embedColor=10923183
-  if slothItemApi[arg]['tier'] == 'UNCOMMON':
-    embedColor=3800852
-  if slothItemApi[arg]['tier'] == 'RARE':
-    embedColor=4149685
-  if slothItemApi[arg]['tier'] == 'EPIC':
-    embedColor=10233776
-  if slothItemApi[arg]['tier'] == 'LEGENDARY':
-    embedColor=16635957
+  argn = arg
+  arg = arg.upper().replace(" ", "_") # still human readable with minimal effort, neater on one line
+  baseLink = "https://api.slothpixel.me/api/skyblock"
+  slothItemApi = requests.get(f"{baseLink}/items/").json()
+  slothAhApi = requests.get(f"{baseLink}/auctions/"+arg).json() # neater, still obvious though
+  colours = {
+    "COMMON": 10923183,
+    "UNCOMMON": 3800852,
+    "RARE": 4149685,
+    "EPIC": 10233776,
+    "LEGENDARY": 16635957,
+    # add one for Mythic rarities too?
+  }
+  tier = slothItemApi[arg]['tier']
+  if tier in colours.keys():
+    embedColour = colours[tier]
+  else: # as to not break the next section for mythic items
+    embedColour = 0
+  item, ah = slothItemApi[arg], slothAhApi # more obvious to read in below embed code
   embed = discord.Embed(title=argn, color=embedColor)
-  embed.add_field(name="Item ID", value=slothItemApi[arg]['item_id'], inline=False)
-  embed.add_field(name="Category", value=slothItemApi[arg]['category'], inline=False)
-  embed.add_field(name="Average Price", value=slothAhApi['average_price'], inline=False)
-  embed.add_field(name="Median Price", value=slothAhApi['median_price'], inline=False)
-  embed.add_field(name="Price Range", value=f"{slothAhApi['min_price']} to {slothAhApi['max_price']} in last {slothAhApi['sold']}", inline=False)
+  embed.add_field(name="Item ID", value=item['item_id'], inline=False)
+  embed.add_field(name="Category", value=item['category'], inline=False)
+  embed.add_field(name="Average Price", value=ah['average_price'], inline=False)
+  embed.add_field(name="Median Price", value=ah['median_price'], inline=False)
+  embed.add_field(name="Price Range", value=f"{ah['min_price']} to {ah['max_price']} in last {ah['sold']}", inline=False)
   await ctx.send(embed=embed)
     
 @bot.command()
